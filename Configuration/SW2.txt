@@ -1,0 +1,86 @@
+enable
+configure terminal
+hostname SW2
+no ip domain-lookup
+enable secret [my-password]
+banner motd #Authorised access only#
+!
+! VLANS
+vlan 10
+ name GAMING
+vlan 20
+ name OFFICE
+vlan 30
+ name CCTV
+vlan 40
+ name GUEST
+vlan 50
+ name SERVERS
+vlan 60
+ name MANAGEMENT
+vlan 70
+ name PRINTERS
+vlan 99
+ name NATIVE
+vlan 999
+ name PARKING
+exit
+!
+! TRUNK TO SW1
+interface fastEthernet0/24
+ description TRUNK to SW1
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 10,20,30,40,50,60,70,99
+ no shutdown
+!
+! ACCESS PORTS
+interface fastEthernet0/2
+ description Office PC3
+ switchport mode access
+ switchport access vlan 20
+!
+interface fastEthernet0/3
+ description Printer
+ switchport mode access
+ switchport access vlan 70
+!
+interface range fastEthernet0/4 - 6
+ description Gaming PCs
+ switchport mode access
+ switchport access vlan 10
+!
+interface range fastEthernet0/7 - 9
+ description Outdoor cameras
+ switchport mode access
+ switchport access vlan 30
+!
+interface fastEthernet0/10
+ description Guest access point
+ switchport mode access
+ switchport access vlan 40
+!
+! UNUSED PORTS
+interface range fastEthernet0/1 , fastEthernet0/11 - 23 , gigabitEthernet0/1 - 2
+ description Unused
+ switchport mode access
+ switchport access vlan 999
+ shutdown
+!
+! MANAGEMENT
+interface vlan 60
+ ip address 192.168.55.75 255.255.255.248
+ no shutdown
+exit
+ip default-gateway 192.168.55.73
+!
+! PASSWORDS
+line console 0
+ password [my-password]
+ login
+exit
+line vty 0 15
+ password [my-password]
+ login
+end
+copy running-config startup-config
