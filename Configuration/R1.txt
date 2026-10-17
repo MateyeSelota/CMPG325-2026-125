@@ -1,1 +1,136 @@
+enable
+configure terminal
+hostname R1
+no ip domain-lookup
+enable secret [my-password]
+service password-encryption
+banner motd #Authorised access only#
+!
+! TRUNK PORT, SUBINTERFACES BELOW
+interface gigabitEthernet0/0
+ description Trunk to SW1
+ no ip address
+ no shutdown
+!
+! GATEWAYS FOR EACH VLAN
+interface gigabitEthernet0/0.10
+ description GAMING
+ encapsulation dot1Q 10
+ ip address 192.168.55.1 255.255.255.240
+ ip helper-address 192.168.55.66
+!
+interface gigabitEthernet0/0.20
+ description OFFICE
+ encapsulation dot1Q 20
+ ip address 192.168.55.17 255.255.255.240
+ ip helper-address 192.168.55.66
+!
+interface gigabitEthernet0/0.30
+ description CCTV
+ encapsulation dot1Q 30
+ ip address 192.168.55.33 255.255.255.240
+!
+interface gigabitEthernet0/0.40
+ description GUEST
+ encapsulation dot1Q 40
+ ip address 192.168.55.49 255.255.255.240
+!
+interface gigabitEthernet0/0.50
+ description SERVERS
+ encapsulation dot1Q 50
+ ip address 192.168.55.65 255.255.255.248
+!
+interface gigabitEthernet0/0.60
+ description MANAGEMENT
+ encapsulation dot1Q 60
+ ip address 192.168.55.73 255.255.255.248
+!
+interface gigabitEthernet0/0.70
+ description PRINTERS
+ encapsulation dot1Q 70
+ ip address 192.168.55.89 255.255.255.248
+!
+! NATIVE VLAN
+interface gigabitEthernet0/0.99
+ description NATIVE
+ encapsulation dot1Q 99 native
+!
+! LINK TO INTERNET SERVER
+interface gigabitEthernet0/1
+ description WAN to Internet server
+ ip address 192.168.55.81 255.255.255.252
+ no shutdown
+!
+! DEFAULT ROUTE
+ip route 0.0.0.0 0.0.0.0 192.168.55.82
+!
+! GUEST DHCP
+ip dhcp excluded-address 192.168.55.49
+ip dhcp pool GUEST
+ network 192.168.55.48 255.255.255.240
+ default-router 192.168.55.49
+ dns-server 192.168.55.82
+!
+! PASSWORDS
+line console 0
+ password [my-password]
+ login
+exit
+line vty 0 4
+ password [my-password]
+ login
+end
+copy running-config startup-config
 
+
+------------------------
+------------------------
+
+
+configure terminal
+!
+! CCTV: GATEWAY AND SERVERS ONLY
+ip access-list extended CCTV-IN
+ permit ip 192.168.55.32 0.0.0.15 host 192.168.55.33
+ permit ip 192.168.55.32 0.0.0.15 192.168.55.64 0.0.0.7
+ deny ip 192.168.55.32 0.0.0.15 192.168.55.0 0.0.0.31
+ deny ip any any
+!
+! PRINTER: OFFICE ONLY
+ip access-list extended PRINTER-IN
+ permit ip 192.168.55.88 0.0.0.7 192.168.55.16 0.0.0.15
+ permit ip 192.168.55.88 0.0.0.7 host 192.168.55.89
+ deny ip any any
+!
+! OFFICE BLOCKED FROM CCTV
+ip access-list extended OFFICE-IN
+ deny ip 192.168.55.16 0.0.0.15 192.168.55.32 0.0.0.15
+ permit ip any any
+!
+! GAMING BLOCKED FROM CCTV AND PRINTER
+ip access-list extended GAMING-IN
+ deny ip 192.168.55.0 0.0.0.15 192.168.55.32 0.0.0.15
+ deny ip 192.168.55.0 0.0.0.15 192.168.55.88 0.0.0.7
+ permit ip any any
+!
+! GUEST: DHCP AND INTERNET ONLY
+ip access-list extended GUEST-IN
+ permit udp any eq 68 any eq 67
+ deny ip 192.168.55.48 0.0.0.15 192.168.55.0 0.0.0.63
+ deny ip 192.168.55.48 0.0.0.15 192.168.55.64 0.0.0.15
+ deny ip 192.168.55.48 0.0.0.15 192.168.55.88 0.0.0.7
+ permit ip 192.168.55.48 0.0.0.15 any
+!
+! APPLY INBOUND
+interface gigabitEthernet0/0.30
+ ip access-group CCTV-IN in
+interface gigabitEthernet0/0.70
+ ip access-group PRINTER-IN in
+interface gigabitEthernet0/0.20
+ ip access-group OFFICE-IN in
+interface gigabitEthernet0/0.10
+ ip access-group GAMING-IN in
+interface gigabitEthernet0/0.40
+ ip access-group GUEST-IN in
+end
+copy running-config startup-config
