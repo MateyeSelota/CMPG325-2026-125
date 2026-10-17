@@ -14,7 +14,7 @@
 
 The Leano Gaming Lounge, located in Mahikeng, required a robust, highly secure, and scalable local area network (LAN) infrastructure to support its modern entertainment operations. 
 
-This project encompasses the complete engineering lifecycle—ranging from requirements analysis and Variable Length Subnet Masking (VLSM) subnet planning to Cisco Packet Tracer simulation, core network service deployment, and extended Access Control List (ACL) security enforcement.
+This project encompasses the complete engineering lifecycle-ranging from requirements analysis and Variable Length Subnet Masking (VLSM) subnet planning to Cisco Packet Tracer simulation, core network service deployment, and extended Access Control List (ACL) security enforcement.
 
 ### Key Implementation Features:
 * **802.1Q VLAN Trunking:** Multi-switch VLAN trunking configured between switches `SW1` and `SW2` across interface `FastEthernet0/24`.
